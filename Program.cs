@@ -21,17 +21,10 @@ while (true)
 {
     Console.WriteLine("_____________________________________________________________");
 
-    if (response.Length > 0)
-    {
-        Console.WriteLine("Commands: \n1: Convert code to C#\n2: Explain code \n3: Explain and convert \n4: Followup question" +
-            "\n5: See current conversation history\n6: Save current conversation \n8: See all saved conversations");
-    }
 
-    else
-    {
-        Console.WriteLine("Commands: \n1: Convert code to C#\n2: Explain code \n3: Explain and convert\n5: See current conversation history" +
-            "\n6: Save current conversation \n8: See all saved conversations");
-    }
+    Console.WriteLine("Commands: \n1: Convert code to C#\n2: Explain code \n3: Explain and convert \n4: Follow-up question to answer" +
+       "\n5: See current conversation history\n6: Save current conversation \n8: See all saved conversations \n9: Load and continue on previous conversations\n10: Delete specific conversations");
+
 
 
     String userInput = Console.ReadLine();
@@ -70,6 +63,11 @@ while (true)
             break;
 
         case "4":
+            if (response == "")
+            {
+                Console.WriteLine("No current conversation history");
+                break;
+            }
             Console.WriteLine("Enter question, followed by a newline with 'exit' ");
             string followUp = readInputFromUser();
             conversationHistory.Add(("user", followUp));
@@ -115,11 +113,45 @@ while (true)
 
         case "9":
 
-            Console.WriteLine("Enter a file number");
+            Console.WriteLine("Enter a file number or 'exit' to go back");
             string fileNumber = Console.ReadLine();
-            loadConversationHistory(fileNumber, conversationHistory);
-            break;
 
+            if(fileNumber == "exit")
+            {
+                break;
+            }
+
+            // Parse string to int
+            if (!(int.Parse(fileNumber) >= fileHandler.getNumberOfFiles()))
+            {
+                loadConversationHistory(fileNumber, conversationHistory);
+                Console.WriteLine("File number " + fileNumber + " loaded");
+                response = "   ";
+                break;
+            }
+            else
+            {
+                Console.WriteLine("File number " + fileNumber + " does not exist");
+                break;
+            }
+
+        case "10":
+
+            Console.WriteLine("Enter a file number to delete");
+            string fileToDelete = Console.ReadLine();
+
+            // Parse string to int
+            if (!(int.Parse(fileToDelete) >= fileHandler.getNumberOfFiles()))
+            {
+                fileHandler.deleteFile(int.Parse(fileToDelete));
+                Console.WriteLine("File number " + fileToDelete + " deleted\nNOTE: Files are renumbered");
+                break;
+            }
+            else
+            {
+                Console.WriteLine("File number " + fileToDelete + " does not exist");
+                break;
+            }
 
         default:
             Console.WriteLine("Invalid input");
@@ -136,9 +168,9 @@ string followUpQuestion(string followUp, List<(string, string)> conversationHist
         DeploymentName = "Testing", //This must match the custom deployment name you chose for your model
         Messages =
         {
-            new ChatRequestAssistantMessage("You are assisting developers translating code written in Smalltalk to C#. You will only reply with the code, and end every message with 'DONE' ")
+            new ChatRequestAssistantMessage("You are assisting developers translating code written in Smalltalk to C#. You will help to your best ability, and end every message with 'DONE' ")
         },
-        MaxTokens = 1500
+        MaxTokens = 3000
     };
 
     foreach (var message in conversationHistory)
@@ -185,7 +217,7 @@ String explainCode(string code)
         DeploymentName = "Testing", //This must match the custom deployment name you chose for your model
         Messages =
     {
-            new ChatRequestSystemMessage("You are assisting developers translating code written in Smalltalk to C#. You will explain what the code does and how it works, and end every message with 'DONE'"),
+            new ChatRequestSystemMessage("You are assisting developers translating code written in Smalltalk to C#. You will explain what the code does and how it works but you will not reply with any translated code, and end every message with 'DONE'"),
             new ChatRequestUserMessage(code),
         },
         MaxTokens = 1500
@@ -194,8 +226,6 @@ String explainCode(string code)
 
     return response.Value.Choices[0].Message.Content;
 
-    //Console.WriteLine(response.Value.Choices[0].Message.Content);
-    //
 }
 
 String explainAndConvert(string code)
@@ -219,69 +249,62 @@ String explainAndConvert(string code)
 void loadConversationHistory(string fileNumber, List<(string, string)> conversationHistory)
 {
     string path = @"./conversationHistory" + fileNumber + ".txt";
+    string userMessage = "";
+    string assistantMessage = "";
+
     using (StreamReader sr = File.OpenText(path))
     {
         string s;
-        bool currentIsUser = true;
+        bool userSection = false;
+        bool assistantSection = false;
         string currentMessage = "";
 
         while ((s = sr.ReadLine()) != null)
         {
 
-            if (s.Length > 6)
+
+            if (s.Length > 6 && s.Substring(0, 6) == "(user,")
             {
-                if (currentIsUser)
+
+                if (assistantSection == true)
                 {
-                    if (s.Substring(0, 6) == "(user,")
-                    {
-                        Console.WriteLine("THIS IS USER " + s);
-                        currentMessage += "user";
-
-                    }
-                    else
-                    {
-
-                        Console.WriteLine(s);
-                    }
+                    conversationHistory.Add(("assistant", assistantMessage));
                 }
-                else if (!currentIsUser && s.Length > 11)
-                {
-
-                    if (s.Substring(0, 11) == "(assistant,")
-                    {
-                        Console.WriteLine("THIS IS ASSISTANT " + s);
-                        // conversationHistory.Add(("assistant", s));
-                        currentIsUser = true;
-                    }
-                    else
-                    {
-                        currentMessage += s;
-                        Console.WriteLine(s);
-                    }
-                }
+                s = s.Substring(6);
+                conversationHistory.Add(("user", s));
+                userSection = true;
+                assistantSection = false;
 
             }
-            else
+            else if (s.Length > 11 && s.Substring(0, 11) == "(assistant,")
             {
-                currentMessage += s;
-                Console.WriteLine(s);
-
+                s = s.Substring(11);
+                assistantMessage += s + "\n";
+                userSection = false;
+                assistantSection = true;
             }
+            else if (userSection == true)
+            {
+                userMessage += s;
+            }
+            else if (assistantSection == true)
+            {
+                assistantMessage += s+"\n";
+            }
+
         }
-        Console.WriteLine("CURRENT MESSAGE _________________________ " + currentMessage);
-
 
     }
 
-}
+    conversationHistory.Add(("assistant", assistantMessage));
 
+}
 String readInputFromUser()
 {
     String userInput = "";
     while (true)
     {
         string codeToConvert = Console.ReadLine();
-        //if (codeToConvert.Contains("exit"))
         if (codeToConvert == "exit")
         {
             break;
