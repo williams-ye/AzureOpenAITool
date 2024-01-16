@@ -17,6 +17,7 @@ dotnet add package Azure.AI.OpenAI --prerelease
 4. Oppfølgingsspørmsål til svaret du fikk av GPT
 5. Se meldingene i den nåværende samtalen
 6. Lagre den nåværende samtalen. (Lagres som .txt fil)
+7. Les siste melding
 8. Se alle lagrede samtaler.
 9. Fortsette på en lagret samtale (finn id ved å bruke 8.)
 10. Slett lagrede samtaler
