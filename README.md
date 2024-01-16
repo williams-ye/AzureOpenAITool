@@ -9,6 +9,8 @@ dotnet add package Azure.AI.OpenAI --prerelease
 - setx AZURE_OPENAI_ENDPOINT "REPLACE_WITH_YOUR_ENDPOINT_HERE"
 ```
 
+Programmet er ikke særlig brukervennlig og tar ikke for seg edgecaser eller feilhåndtering.
+F.eks ikke spør oppfølgingsspørsmål når det ikke er en tidligere melding. 
 
 ### Funksjoner
 1. Konvertere kode
