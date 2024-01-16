@@ -1,6 +1,7 @@
 ﻿# AzureOpenAI
 #### Husk å kjøre kommandoene:
 ```
+dotnet build
 dotnet add package Azure.AI.OpenAI --prerelease
 
 ### For å sette systemvariabler
