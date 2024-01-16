@@ -8,6 +8,21 @@ using azure_openai_quickstart;
 string endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 string key = GetEnvironmentVariable("AZURE_OPENAI_KEY");
 
+OpenAIClientOptions options = new OpenAIClientOptions()
+{
+    Retry =
+            {
+        Delay = TimeSpan.FromSeconds(2),
+        MaxRetries = 10,
+        Mode = RetryMode.Fixed
+
+
+            }
+};
+
+OpenAIClient client = new(new Uri(endpoint), new AzureKeyCredential(key), options);
+
+
 OpenAIClient client = new(new Uri(endpoint), new AzureKeyCredential(key));
 
 FileHandler fileHandler = new FileHandler();
