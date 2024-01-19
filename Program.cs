@@ -3,8 +3,6 @@ using Azure.AI.OpenAI;
 using static System.Environment;
 using azure_openai_quickstart;
 
-
-
 string endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
 string key = GetEnvironmentVariable("AZURE_OPENAI_KEY");
 
