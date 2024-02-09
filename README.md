@@ -1,4 +1,6 @@
 ﻿# AzureOpenAI
+NB: Ta kontakt for ny og bedre versjon ved ordentlig frontend og backend.
+
 #### Husk å kjøre kommandoene:
 ```
 dotnet build
